@@ -6,16 +6,16 @@
     <#if user??>
         <#if lang>
             <h5>Hello, ${user.username}!</h5>
-            <div>This is a forum that will finally help you choose what to read, what to play and much, much more.</div>
+            <div>This is a social network where you can store your photos. And if you want, share them with everyone.
+            </div>
         <#else>
             <h5>Привет, ${user.username}!</h5>
-            <div>Это форум, который тебе поможет наконец-то выбрать что почитать,во что поиграть и многое-многое
-                другое
+            <div>Это социальная сеть, в которой ты можешь хранить свои фотографии. А при желании, делиться ими со всеми.
             </div>
         </#if>
     <#else>
         <h5>Hello, guest!</h5>
-        <div>This is a forum that will finally help you choose what to read, what to play and much, much more.</div>
+        <div>This is a social network where you can store your photos. And if you want, share them with everyone.</div>
     </#if>
     <#if lang>
         <div class="mt-5">
