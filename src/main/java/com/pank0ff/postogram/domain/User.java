@@ -1,9 +1,11 @@
 package com.pank0ff.postogram.domain;
 
+import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
+import javax.validation.constraints.*;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
@@ -11,15 +13,46 @@ import java.util.Set;
 
 @Entity
 @Table(name = "usr")
+@DynamicUpdate
 public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+
+    @NotBlank
+    @Size(min = 4, max = 16)
     private String username;
+
+    @NotBlank
+    @Size(min = 8, max = 16)
     private String password;
+
     private boolean active;
+
+    @Min(0)
+    private double userRate;
+
+    @Size(min = 7)
+    @Pattern(regexp = "^[\\w!#$%&'*+/=?`{|}~^-]+(?:\\.[\\w!#$%&'*+/=?`{|}~^-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,6}$")
     private String email;
+
     private String aboutMyself;
+
+    @Min(0)
+    private int countOfPosts;
+
+    @Min(0)
+    private int countOfLikes;
+
+    private String lang;
+
+    @Size(min = 4, max = 5)
+    private String theme;
+
+    @Min(0)
+    @Max(1)
+    private int isLocked;
+
     private String dateOfRegistration;
     private String avatarFilename;
     private String linkFacebook;
@@ -27,10 +60,7 @@ public class User implements UserDetails {
     private String linkYoutube;
     private String linkDribble;
     private String linkLinkedIn;
-    private String choice;
-    private String theme;
-    private int countOfPosts;
-    private int countOfLikes;
+
     @ElementCollection(targetClass = Role.class, fetch = FetchType.EAGER)
     @CollectionTable(name = "user_role", joinColumns = @JoinColumn(name = "user_id"))
     @Enumerated(EnumType.STRING)
@@ -74,6 +104,14 @@ public class User implements UserDetails {
 
     public String getUsername() {
         return username;
+    }
+
+    public int getIsLocked() {
+        return isLocked;
+    }
+
+    public void setIsLocked(int isLocked) {
+        this.isLocked = isLocked;
     }
 
     @Override
@@ -205,12 +243,12 @@ public class User implements UserDetails {
         this.linkLinkedIn = linkLinkedIn;
     }
 
-    public String getChoice() {
-        return choice;
+    public String getLang() {
+        return lang;
     }
 
-    public void setChoice(String choice) {
-        this.choice = choice;
+    public void setLang(String choice) {
+        this.lang = choice;
     }
 
     public String getTheme() {
@@ -253,5 +291,11 @@ public class User implements UserDetails {
         this.countOfLikes = countOfLikes;
     }
 
+    public double getUserRate() {
+        return userRate;
+    }
 
+    public void setUserRate(double userRate) {
+        this.userRate = userRate;
+    }
 }

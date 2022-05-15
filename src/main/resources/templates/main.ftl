@@ -58,7 +58,7 @@
                     </a>
                     <div>
                         <a class="topic" href="/post/topic/${message.tag}">${message.tag}</a>
-                        <#if message.hashtag!=''>
+                        <#if message.hashtag??>
                             <a href="/post/hashtag/${message.hashtag}">#${message.hashtag}</a>
                         </#if>
                     </div>
@@ -103,12 +103,12 @@
                             <div>
                                 <a class="col align-self-center"
                                    href="/user/profile/${message.getAuthor().id}/${message.getAuthor().username}">Author: ${message.authorName}</a>
-                                rate: ${message.getAuthor().getCountOfLikes()/message.getAuthor().getCountOfPosts()}
+                                rate: ${message.getAuthor().getUserRate()}
                             </div>
                             <div>
                                 <#if user??>
                                     <form class="d-flex flex-row justify-content-between align-items-center "
-                                          method="post" action="/rate/${message.id}/${user.username}">
+                                          method="post" action="/rate/${message.id}">
                                         <div class="form-group mx-2 ">
                                             <select name="rate" size="1" class="rounded">
                                                 <option value="1">1</option>
@@ -172,7 +172,7 @@
                     </a>
                     <div>
                         <a class="topic" href="/post/topic/${message.tag}">${message.tag}</a>
-                        <#if message.hashtag!=''>
+                        <#if message.hashtag??>
                             <a href="/post/hashtag/${message.hashtag}">#${message.hashtag}</a>
                         </#if>
                     </div>
@@ -216,12 +216,12 @@
                             <div>
                                 <a class="col align-self-center"
                                    href="/user/profile/${message.getAuthor().id}/${message.getAuthor().username}">Автор: ${message.authorName}</a>
-                                рейтинг: ${message.getAuthor().getCountOfLikes()/message.getAuthor().getCountOfPosts()}
+                                рейтинг: ${message.getAuthor().getUserRate()}
                             </div>
                             <div>
                                 <#if user??>
                                     <form class="d-flex flex-row justify-content-between align-items-center "
-                                          method="post" action="/rate/${message.id}/${user.username}">
+                                          method="post" action="/rate/${message.id}">
                                         <div class="form-group mx-2 ">
                                             <select name="rate" size="1" class="rounded">
                                                 <option value="1">1</option>

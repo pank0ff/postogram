@@ -1,22 +1,50 @@
 package com.pank0ff.postogram.domain;
 
+import org.hibernate.annotations.DynamicUpdate;
+
 import javax.persistence.*;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+
 @Entity
+@Table
+@DynamicUpdate
 public class Message {
     @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
 
+    @NotBlank
+    @Size(min = 5)
     private String text;
+
+    @NotBlank
+    @Size(min = 2, max = 7)
     private String tag;
+
+    @NotBlank
+    @Size(min = 5)
     private String name;
+
+    @NotBlank
+    @Size(min = 1)
     private String hashtag;
+
+    @Min(0)
+    @Max(5)
     private double averageRate;
+
+    @Min(0)
     private int likesCount;
+
+    @Min(0)
+    @Max(1)
     private int meLiked;
 
     @OneToMany(mappedBy = "message", orphanRemoval = true)
@@ -31,7 +59,7 @@ public class Message {
             joinColumns = {@JoinColumn(name = "message_id")},
             inverseJoinColumns = {@JoinColumn(name = "user_id")}
     )
-    private Set<User> likes = new HashSet<>();
+    private final Set<User> likes = new HashSet<>();
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
@@ -71,10 +99,6 @@ public class Message {
 
     public User getAuthor() {
         return author;
-    }
-
-    public void setAuthor(User author) {
-        this.author = author;
     }
 
     public void setText(String text) {
@@ -133,28 +157,8 @@ public class Message {
         this.averageRate = averageRate;
     }
 
-    public List<Comment> getComments() {
-        return comments;
-    }
-
-    public void setComments(List<Comment> comments) {
-        this.comments = comments;
-    }
-
-    public List<Rate> getRates() {
-        return rates;
-    }
-
-    public void setRates(List<Rate> rates) {
-        this.rates = rates;
-    }
-
     public Set<User> getLikes() {
         return likes;
-    }
-
-    public void setLikes(Set<User> likes) {
-        this.likes = likes;
     }
 
     public int getMeLiked() {
@@ -164,4 +168,5 @@ public class Message {
     public void setMeLiked(int meLiked) {
         this.meLiked = meLiked;
     }
+
 }

@@ -3,9 +3,11 @@ package com.pank0ff.postogram.service;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.pank0ff.postogram.domain.Message;
+import com.pank0ff.postogram.domain.Role;
 import com.pank0ff.postogram.domain.User;
 import com.pank0ff.postogram.repos.MessageRepo;
 import com.pank0ff.postogram.repos.UserRepo;
+import org.decimal4j.util.DoubleRounder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -16,17 +18,20 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
-public class UserSevice implements UserDetailsService {
-    @Autowired
-    private UserRepo userRepo;
+public class UserService implements UserDetailsService {
+
+    private final UserRepo userRepo;
+    private final MessageRepo messageRepo;
 
     @Autowired
-    private MessageRepo messageRepo;
+    public UserService(UserRepo userRepo, MessageRepo messageRepo) {
+        this.userRepo = userRepo;
+        this.messageRepo = messageRepo;
+    }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -36,7 +41,7 @@ public class UserSevice implements UserDetailsService {
 
     public void updateProfile(User user, String password, String email, String aboutYourself, String userChoice, String theme, String linkFacebook, String linkGoogle, String linkYoutube, String linkDribble, String linkLinkedIn, MultipartFile file) throws IOException {
         String userEmail = user.getEmail();
-        String choice = user.getChoice();
+        String choice = user.getLang();
         String userTheme = user.getTheme();
         String aboutYourself1 = user.getAboutMyself();
         String linkFacebook1 = user.getLinkFacebook();
@@ -62,7 +67,7 @@ public class UserSevice implements UserDetailsService {
         boolean isUserChoiceChanged = (userChoice != null && !userChoice.equals(choice)) ||
                 (choice != null && !choice.equals(userChoice));
         if (isUserChoiceChanged) {
-            user.setChoice(userChoice);
+            user.setLang(userChoice);
         }
         boolean isEmailChanged = (email != null && !email.equals(userEmail)) ||
                 (userEmail != null && !userEmail.equals(email));
@@ -97,13 +102,14 @@ public class UserSevice implements UserDetailsService {
         if (!StringUtils.isEmpty(password)) {
             user.setPassword(password);
         }
-        if (file != null && !file.getOriginalFilename().isEmpty()) {
+        if (file != null && !Objects.requireNonNull(file.getOriginalFilename()).isEmpty()) {
             File temp = null;
             try {
                 temp = File.createTempFile("myTempFile", ".png");
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            assert temp != null;
             file.transferTo(temp);
             Map uploadResult = cloudinary.uploader().upload(temp, ObjectUtils.emptyMap());
             String resultFilename = (String) uploadResult.get("url");
@@ -131,5 +137,126 @@ public class UserSevice implements UserDetailsService {
     public void unlike(User user, Message message) {
         message.getLikes().removeIf(user1 -> Objects.equals(user1.getUsername(), user.getUsername()));
         messageRepo.save(message);
+    }
+
+    public void userSave(String username, Map<String, String> form, User user) {
+        user.setUsername(username);
+
+        Set<String> roles = Arrays.stream(Role.values())
+                .map(Role::name)
+                .collect(Collectors.toSet());
+
+        user.getRoles().clear();
+
+        for (String key : form.keySet()) {
+            if (roles.contains(key)) {
+                user.getRoles().add(Role.valueOf(key));
+            }
+        }
+        userRepo.save(user);
+    }
+
+    public int getUserLikesCount(User user) {
+        int counter = 0;
+        List<Message> messages = messageRepo.findByAuthor(user);
+        for (Message message : messages) {
+            counter += message.getLikesCount();
+        }
+        return counter;
+    }
+
+    public int getUserCountOfPosts(User user) {
+        return messageRepo.findByAuthor(user).size();
+    }
+
+    public boolean isSubscriber(User user, User currentUser) {
+        boolean isSubscriber = false;
+        for (User user2 : user.getSubscribers()) {
+            if (Objects.equals(user2.getUsername(), currentUser.getUsername())) {
+                isSubscriber = true;
+                break;
+            }
+        }
+        return isSubscriber;
+    }
+
+    public User getUserByUsername(String username) {
+        return userRepo.findByUsername(username);
+    }
+
+    public User getUserById(Long id) {
+        if (userRepo.findById(id).isPresent()) {
+            return userRepo.findById(id).get();
+        } else {
+            return null;
+        }
+    }
+
+    public void addUser(User user, String theme, String choice) {
+        Date date = new Date();
+        user.setDateOfRegistration(date.toString().substring(4));
+        user.setActive(true);
+        user.setRoles(Collections.singleton(Role.USER));
+        user.setTheme(theme);
+        user.setLang(choice);
+        userRepo.save(user);
+    }
+
+    public List<User> getAllUsers() {
+        return userRepo.findAll();
+    }
+
+    public void deleteUser(User user) {
+        userRepo.delete(user);
+    }
+
+    public double calcUserRate(User user) {
+        if (user.getCountOfPosts() == 0) {
+            return 0;
+        } else {
+            double countOfPosts = user.getCountOfPosts();
+            double countOfLikes = user.getCountOfLikes();
+            return DoubleRounder.round(countOfLikes / countOfPosts, 2);
+        }
+    }
+
+    public void calcUserRateForAll() {
+        for (User user : getAllUsers()) {
+            user.setUserRate(calcUserRate(user));
+        }
+    }
+
+    public boolean getUserTheme(User user) {
+        if (user == null) {
+            return true;
+        } else {
+            return Objects.equals(user.getTheme(), "LIGHT");
+        }
+    }
+
+    public boolean getUserLang(User user) {
+        if (user == null) {
+            return true;
+        } else {
+            return Objects.equals(user.getLang(), "ENG");
+        }
+    }
+
+    public boolean getUserIsAdmin(User user) {
+        if (user == null) {
+            return false;
+        } else {
+            return user.isAdmin();
+        }
+    }
+
+    public void lockAccount(User user) {
+        user.setIsLocked(1);
+        userRepo.save(user);
+    }
+
+    public void unlockAccount(User user) {
+        user.setIsLocked(0);
+        userRepo.save(user);
     }
 }
