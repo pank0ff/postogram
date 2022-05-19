@@ -259,4 +259,14 @@ public class UserService implements UserDetailsService {
         user.setIsLocked(0);
         userRepo.save(user);
     }
+
+    public boolean isMutualSubscription(User user, User currentUser) {
+        return user.getSubscribers().contains(currentUser) & currentUser.getSubscribers().contains(user);
+    }
+
+    public void getMessageIfMutualSubscription(User user, User currentUser, List<Message> messages) {
+        if (isMutualSubscription(user, currentUser)) {
+            messages = messageRepo.findByAuthor(user);
+        }
+    }
 }

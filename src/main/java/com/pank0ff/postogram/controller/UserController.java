@@ -139,6 +139,7 @@ public class UserController {
     public String userProfile(
             Model model, @Valid @PathVariable String username, @AuthenticationPrincipal User currentUser) {
         User user = userService.getUserByUsername(username);
+        User currentUserTemp = userService.getUserByUsername(currentUser.getUsername());
         List<Message> messages = messageService.getMessagesByAuthor(user);
         messageService.setMeLiked(messages, currentUser);
         messageService.setMessagesLikesCount(messages);
@@ -147,6 +148,8 @@ public class UserController {
         user.setUserRate(userService.calcUserRate(user));
         messageService.setMessagesAverageRate(messages);
         Collections.reverse(messages);
+        userService.getMessageIfMutualSubscription(user, currentUserTemp, messages);
+        model.addAttribute("mutualSubscription", userService.isMutualSubscription(user, currentUserTemp));
         model.addAttribute("isCurrentUser", Objects.equals(user.getUsername(), currentUser.getUsername()));
         model.addAttribute("subscribersCount", user.getSubscribers().size());
         model.addAttribute("subscriptionsCount", user.getSubscriptions().size());
